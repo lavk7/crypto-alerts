@@ -59,4 +59,4 @@
 Trade-offs:
     - Redshift : Achieve greater performance by giving up fault tolerance
     - Data Ingestion Module: Achieve high availability and cost cutting by giving up resiliency ( Lambda )
-    - Data Analysi: Achieve scalability and reduced cost by giving up resiliency ( Lambda )
+    - Data Analysis: Achieve scalability and reduced cost by giving up resiliency ( Lambda )
