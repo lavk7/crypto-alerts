@@ -1,68 +1,3 @@
-provider "aws" {
-  region = "ap-southeast-1"
-}
-
-// VPC BLOCK
-module "vpc" {
-  source = "modules/vpc"
-}
-
-// LAMBDA BLOCK
-module "policy_read_s3" {
-  source = "modules/iam_policy"
-  name = "UserReadS3"
-  actions = ["s3:Get*","s3:List*"]
-}
-
-module "policy_firehose_access" {
-  source = "modules/iam_policy"
-  name = "UserWriteFirehose"
-  actions = [
-    "firehose:DeleteDeliveryStream",
-    "firehose:PutRecord",
-    "firehose:PutRecordBatch",
-    "firehose:UpdateDestination"
-  ]
-}
-
-module "access_s3_firehose" {
-  source = "modules/iam_role"
-  name = "ReadS3AndWriteFirehose"
-  services = [
-    "lambda.amazonaws.com"
-  ]
-}
-
-resource "aws_iam_policy_attachment" "attach_s3_policy" {
-  name = "attach_s3_policy"
-  roles = ["${module.access_s3_firehose.name}"]
-  policy_arn = "${module.policy_read_s3.arn}"
-}
-
-resource "aws_iam_policy_attachment" "attach_firehose_policy" {
-  name = "attach_firehosw_policy"
-  roles = ["${module.access_s3_firehose.name}"]
-  policy_arn = "${module.policy_firehose_access.arn}"
-}
-
-resource "aws_lambda_function" "ingest_data" {
-  role = "${module.access_s3_firehose.arn}"
-  filename = "ingest.zip"
-  function_name = "ingest_data"
-  handler = "ingest.lambda_handler"
-  runtime = "python3.6"
-  source_code_hash = "${base64sha256(file("ingest.zip"))}"
-  timeout = 60
-}
-
-// REDSHIFT BLOCK
-
-module "redshift" {
-  source = "modules/redshift"
-  vpc_id = "${module.vpc.vpc_id}"
-}
-
-// FIREHOSE BLOCK
 resource "aws_s3_bucket" "bucket" {
   bucket = "lk7-firehose-bucket"
   acl    = "private"
@@ -144,8 +79,8 @@ resource "aws_lambda_function" "process_data" {
   timeout = 60
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "ingest-stream" {
-  name        = "ingest-stream"
+resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+  name        = "terraform-kinesis-firehose-test-stream"
   destination = "redshift"
 
   s3_configuration {
