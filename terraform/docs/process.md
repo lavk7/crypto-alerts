@@ -28,3 +28,12 @@
             - We can also use Kinesis stream followed by Kinesis Firehose if the ingestion is real time.
     Design: To pull data use a lambda function from the source and deliver data to firehose delivery stream
 
+- Data Store:
+    - Data will be delivered from DI module to this datastore
+    - Data will be extracted to Data Analysis Module from this Datastore
+    - At first, dynamodb would have been thought as a good option, as it eliminates the Single point of failure and is truly serverless. But it would be difficult to achieve low latency for the system for complex queries.
+    - Since Data Analysis module need to handle other analysis scripts in future and data can be huge, it is better to go with AWS Redshift.
+        - Pros: It is scalable and can give result of complex queries on large data with low latency. 
+        - Cons: Induces Single Point of Failure to system. Also resizing operations have to managed by user now instead of amazon.
+    Design: Create a cluster of Redshift with two nodes of r4.8xlarge to provide optimal performance
+
