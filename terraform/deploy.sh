@@ -28,5 +28,15 @@ function create_zip(){
 create_zip $INGEST_FILE
 create_zip $ETL_FILE
 
-docker run --net=host ubuntu:16.04 \
-       -
+[ ! "$(docker ps -a | grep crypto-alert)" ] || docker rm -f crypto-alert
+
+[ -f terraform/terraform.zip ] && rm terraform/terraform.zip
+curl https://releases.hashicorp.com/terraform/0.11.8/terraform_0.11.8_linux_amd64.zip --output terraform.zip
+unzip -o terraform.zip
+docker run -d -t --net=host --name=crypto-alert \
+       -v $(pwd):/data \
+       -v $(dirname ~/$(whoami))/.aws/credentials:/root/.aws/credentials \
+       ubuntu:16.04 \
+       /bin/sh /data/entrypoint.sh
+
+# 
