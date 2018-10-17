@@ -134,10 +134,20 @@ resource "aws_iam_policy_attachment" "attach_log_policy_firehose" {
   roles = ["${module.firehose_iam_role.name}"]
   policy_arn = "${module.cloudwatch_logs_policy.arn}"
 }
+resource "aws_lambda_function" "process_data" {
+  role = "${module.firehose_iam_role.arn}"
+  filename = "etl.zip"
+  function_name = "etl"
+  handler = "etl.lambda_handler"
+  runtime = "python3.6"
+  source_code_hash = "${base64sha256(file("etl.zip"))}"
+  timeout = 60
+}
 
 resource "aws_kinesis_firehose_delivery_stream" "ingest-stream" {
   name        = "ingest-stream"
   destination = "redshift"
+
 
   s3_configuration {
     role_arn           = "${module.firehose_iam_role.arn}"

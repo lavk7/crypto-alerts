@@ -33,7 +33,7 @@ def download_dir(client,firehoseclient, resource, dist, local, bucket):
                                     'Data': json.dumps(pricelist[i+j])
                                 })
                             firehoseclient.put_record_batch(
-                                DeliveryStreamName = "terraform-kinesis-firehose-test-stream",
+                                DeliveryStreamName = "ingest-stream",
                                 Records = recordlist
                             )    
                 except Exception as e:
