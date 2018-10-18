@@ -61,80 +61,23 @@ module "redshift" {
   source = "modules/redshift"
   vpc_id = "${module.vpc.vpc_id}"
   igw_id = "${module.vpc.igw_id}"
+  firehose_role = "${module.firehose_iam_role.arn}"
 }
 
-// FIREHOSE BLOCK
-resource "aws_s3_bucket" "bucket" {
-  bucket = "lk7-firehose-bucket"
-  acl    = "private"
-}
-
-module "s3ReadWrite" {
-  source = "modules/iam_policy"
-  name = "S3ReadWriteFirehose"
-  actions = [
-    "s3:AbortMultipartUpload",        
-    "s3:GetBucketLocation",        
-    "s3:GetObject",        
-    "s3:ListBucket",        
-    "s3:ListBucketMultipartUploads",        
-    "s3:PutObject"
-  ]
-  resources = [
-    "${aws_s3_bucket.bucket.arn}",
-    "${aws_s3_bucket.bucket.arn}/*"
-    ]
-}
-
-module "invoke_lambda_policy" {
-  source = "modules/iam_policy"
-  name = "InvokeLambda"
-  actions = [
-    "lambda:InvokeFunction", 
-    "lambda:GetFunctionConfiguration" 
-  ]
-}
-
-module "cloudwatch_logs_policy" {
-  source = "modules/iam_policy"
-  name = "RegisterLogs"
-  actions = [
-    "logs:CreateLogGroup",
-    "logs:CreateLogStream",
-    "logs:PutLogEvents",
-    "logs:DescribeLogStreams"
-  ]
-  resources = ["arn:aws:logs:*:*:*"]
-
-
+// FIREHOSE S3 BUCKET
+module "firehose_s3" {
+  source = "modules/firehose_s3"
+  
 }
 
 
+// FIREHOSE IAM ROLE
 module "firehose_iam_role" {
-  source = "modules/iam_role"
-  name = "FirehoseIamRole"
-  services = [
-    "firehose.amazonaws.com",
-    "lambda.amazonaws.com"
-  ]
+  source = "modules/firehose_iam"
+  bucket_arn = "${module.firehose_s3.arn}"
 }
 
-resource "aws_iam_policy_attachment" "attach_s3_policy_firehose" {
-  name = "attach_s3_policy_firehoes"
-  roles = ["${module.firehose_iam_role.name}"]
-  policy_arn = "${module.s3ReadWrite.arn}"
-}
-resource "aws_iam_policy_attachment" "attach_lambda_policy_firehose" {
-  name = "attach_s3_policy_firehoes"
-  roles = ["${module.firehose_iam_role.name}"]
-  policy_arn = "${module.invoke_lambda_policy.arn}"
-}
-
-resource "aws_iam_policy_attachment" "attach_log_policy_firehose" {
-  name = "attach_s3_policy_firehoes"
-  roles = ["${module.firehose_iam_role.name}"]
-  policy_arn = "${module.cloudwatch_logs_policy.arn}"
-}
+// FIREHOSE LAMBDA 
 resource "aws_lambda_function" "process_data" {
   role = "${module.firehose_iam_role.arn}"
   filename = "etl.zip"
@@ -152,12 +95,9 @@ resource "aws_kinesis_firehose_delivery_stream" "ingest-stream" {
 
   s3_configuration {
     role_arn           = "${module.firehose_iam_role.arn}"
-    bucket_arn         = "${aws_s3_bucket.bucket.arn}"
+    bucket_arn         = "${module.firehose_s3.arn}"
     buffer_size        = 10
     buffer_interval    = 400
-    compression_format = "GZIP"
-    
-
   }
 
   redshift_configuration {
@@ -165,8 +105,9 @@ resource "aws_kinesis_firehose_delivery_stream" "ingest-stream" {
     cluster_jdbcurl    = "jdbc:redshift://${module.redshift.endpoint}/${module.redshift.database_name}"
     username           = "${module.redshift.master_username}"
     password           = "${module.redshift.master_password}"
+    copy_options       = "json 'auto'"
     data_table_name    = "ethusdt"
-    data_table_columns = "data,high,low,\"open\",close,volume,quoteVolume,weightedAverage"
+    data_table_columns = "date,high,low,\"open\",close,volume,quoteVolume,weightedAverage"
     s3_backup_mode     = "Disabled"
         processing_configuration = [
       {

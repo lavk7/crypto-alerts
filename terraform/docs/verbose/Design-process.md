@@ -55,8 +55,3 @@
     - Function is to receive the alert and send it as sms, email , etc. 
     - The solution of this shall be straigh forward, to use Amazon SNS. 
     - To support consumers like slack, just create a lambda function that will consume the message sent to the topic. It will then send the notification to slack client.
-
-Trade-offs:
-    - Redshift : Achieve greater performance by giving up fault tolerance
-    - Data Ingestion Module: Achieve high availability and cost cutting by giving up resiliency ( Lambda )
-    - Data Analysis: Achieve scalability and reduced cost by giving up resiliency ( Lambda )

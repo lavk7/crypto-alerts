@@ -1,7 +1,18 @@
 #!/bin/bash
 
+while getopts "s:" arg; do
+  case $arg in
+    s)
+      echo $OPTARG
+      S3_BUCKET=$OPTARG
+      ;;
+  esac
+done
+
+echo "Using bucket as $S3_BUCKET"
 set -x
 function deploy(){
+    [ -z "$S3_BUCKET" ] &&  echo 'S3 BUCKET not provided' && exit 1
     INGEST_FILE='ingest'
     ETL_FILE='etl'
     CURR_DIR=$(pwd)
@@ -42,24 +53,25 @@ function create_zip(){
 }
 
 function destroy(){
-    docker exec -it crypto-alert /bin/sh -c "cd data; terraform destroy -auto-approve"
+    docker exec -it crypto-alert /bin/sh -c "cd data; terraform init; terraform destroy -auto-approve"
 }
 
 function apply(){
     docker exec -it crypto-alert /bin/sh -c "cd data; terraform init;  terraform apply -auto-approve"
 }
-case $1 in
-"deploy")
-        deploy
-        ;;
-"destroy")
-        destroy
-        ;;
-"apply")
-        apply
-        ;;
-*)
-        exit 1
-        ;;
-esac
+
+echo "$@"
+for arg in "$@"; do
+        case $arg in
+        "deploy")
+                deploy
+                ;;
+        "destroy")
+                destroy
+                ;;
+        "update")
+                apply
+                ;;
+        esac
+done
 

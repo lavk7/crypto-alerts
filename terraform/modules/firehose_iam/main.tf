@@ -1,10 +1,9 @@
-resource "aws_s3_bucket" "bucket" {
-  bucket = "lk7-firehose-bucket"
-  acl    = "private"
+variable "bucket_arn" {
+  
 }
 
 module "s3ReadWrite" {
-  source = "../modules/iam_policy"
+  source = "../iam_policy"
   name = "S3ReadWriteFirehose"
   actions = [
     "s3:AbortMultipartUpload",        
@@ -15,13 +14,13 @@ module "s3ReadWrite" {
     "s3:PutObject"
   ]
   resources = [
-    "${aws_s3_bucket.bucket.arn}",
-    "${aws_s3_bucket.bucket.arn}/*"
+    "${var.bucket_arn}",
+    "${var.bucket_arn}/*"
     ]
 }
 
 module "invoke_lambda_policy" {
-  source = "../modules/iam_policy"
+  source = "../iam_policy"
   name = "InvokeLambda"
   actions = [
     "lambda:InvokeFunction", 
@@ -30,7 +29,7 @@ module "invoke_lambda_policy" {
 }
 
 module "cloudwatch_logs_policy" {
-  source = "../modules/iam_policy"
+  source = "../iam_policy"
   name = "RegisterLogs"
   actions = [
     "logs:CreateLogGroup",
@@ -45,11 +44,12 @@ module "cloudwatch_logs_policy" {
 
 
 module "firehose_iam_role" {
-  source = "../modules/iam_role"
+  source = "../iam_role"
   name = "FirehoseIamRole"
   services = [
     "firehose.amazonaws.com",
-    "lambda.amazonaws.com"
+    "lambda.amazonaws.com",
+    "redshift.amazonaws.com"
   ]
 }
 
@@ -70,6 +70,6 @@ resource "aws_iam_policy_attachment" "attach_log_policy_firehose" {
   policy_arn = "${module.cloudwatch_logs_policy.arn}"
 }
 
-output "role_arn" {
+output "arn" {
   value = "${module.firehose_iam_role.arn}"
 }

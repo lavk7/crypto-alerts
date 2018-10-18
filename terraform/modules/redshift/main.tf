@@ -8,6 +8,7 @@ resource "aws_redshift_cluster" "redshift_cluster" {
   cluster_subnet_group_name = "${aws_redshift_subnet_group.redshift_subnet_group.name}"
   vpc_security_group_ids = ["${aws_security_group.redshift_access.id}"]
   final_snapshot_identifier = "final-backup-redshift"
+  iam_roles = ["${var.firehose_role}"]
 }
 
 resource "aws_subnet" "private_subnet" {
