@@ -7,6 +7,8 @@
 
 ## Deployment
 - Run `cryptoalert.sh -s $BUCKET_NAME deploy` to deploy. $BUCKET_NAME should be unique and not existing.
+- To check logs of deployment process
+    `docker logs --follow crypto-alert`
 - Create table on redshift by running following in query with follwing details.
     - Authentication :
     ```
@@ -37,7 +39,8 @@
 
 - Confirm the firehose transmission by checking the log of the transformation lambda function `etl`
 
-- Wait for few minutes and check the table `ethusdt` table in redshift cluster `crypto-data` 
+- Wait for few minutes and check the table `ethusdt` table in redshift cluster `crypto-data` with query 
+    `select * from public.ethusdt;`
 
 ## Update 
 If any update in terraform file, run `./cryptalert.sh update`
@@ -48,7 +51,12 @@ If any update in terraform file, run `./cryptalert.sh update`
 To destroy run `./cryptoalert.sh destroy`
 
 # Troubleshooting
-- By chance if .terraform or .tfstate files got removed, the infrastructure has to be destoyed manually in following order:
+- While destroying, if it is stuck at destroying igw, check the following things
+    - Make sure s3 bucket is deleted
+    - Make sure redshift snapshots does not already have `final-backup-snapshot`
+- If terraform state is broken due to some explicit changes to infrastructure, do 
+    - `terraform refresh`
+- If .terraform or .tfstate files got removed by mistake, the infrastructure can be destoyed manually in following order:
     - Redshift
     - Redshift subnetgroup `redshift-sbunet`
     - S3 Bucket

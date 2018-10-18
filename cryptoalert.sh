@@ -13,6 +13,7 @@ echo "Using bucket as $S3_BUCKET"
 set -x
 function deploy(){
     [ -z "$S3_BUCKET" ] &&  echo 'S3 BUCKET not provided' && exit 1
+    sed -i "s/default =.*/default = \"$S3_BUCKET\"/g" main.tf
     INGEST_FILE='ingest'
     ETL_FILE='etl'
     CURR_DIR=$(pwd)
@@ -28,7 +29,7 @@ function deploy(){
     [ -f terraform/terraform.zip ] && rm terraform/terraform.zip
     curl https://releases.hashicorp.com/terraform/0.11.8/terraform_0.11.8_linux_amd64.zip --output terraform.zip
     unzip -o terraform.zip
-    docker run -i -t --net=host --name=crypto-alert \
+    docker run -d -t --net=host --name=crypto-alert \
         -v $(pwd):/data \
         -v $(dirname ~/$(whoami))/.aws/credentials:/root/.aws/credentials \
         ubuntu:16.04 \

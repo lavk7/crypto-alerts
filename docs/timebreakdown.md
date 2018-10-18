@@ -6,7 +6,7 @@
 - Error: Redshift not accessible                            ~ 1 hour
 - Error: missing `json auto`                                ~ 30 mins
 - Error: Authorizing problem                                ~ 30 mins
-- Test runs X ~ 15                                          ~ 1 hour
+- Test runs X 15                                            ~ 1 hour
 - Terraform intial tf file                                  ~ 30 mins
 - Terraform testing, bug fixing and Documentation           ~ 1 hour 30 mins
 - Deployment script and documentation for deployment        ~ 1 hour

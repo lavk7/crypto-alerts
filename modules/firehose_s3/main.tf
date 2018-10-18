@@ -1,6 +1,9 @@
+variable "bucket_name" {
+  
+}
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "lk7-firehose-bucket"
+  bucket = "${var.bucket_name}"
   acl    = "private"
   force_destroy = true
 }

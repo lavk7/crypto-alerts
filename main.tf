@@ -1,13 +1,16 @@
+variable "bucket_name" {
+  default = "lk7-firehose-develop"
+}
 provider "aws" {
   region = "ap-southeast-1"
 }
 
-// VPC BLOCK
+## VPC BLOCK
 module "vpc" {
   source = "modules/vpc"
 }
 
-// LAMBDA BLOCK
+## Ingest LAMBDA BLOCK
 module "policy_read_s3" {
   source = "modules/iam_policy"
   name = "UserReadS3"
@@ -55,7 +58,7 @@ resource "aws_lambda_function" "ingest_data" {
   timeout = 60
 }
 
-// REDSHIFT BLOCK
+## REDSHIFT BLOCK
 
 module "redshift" {
   source = "modules/redshift"
@@ -64,20 +67,21 @@ module "redshift" {
   firehose_role = "${module.firehose_iam_role.arn}"
 }
 
-// FIREHOSE S3 BUCKET
+## FIREHOSE S3 BUCKET
 module "firehose_s3" {
   source = "modules/firehose_s3"
+  bucket_name = "${var.bucket_name}"
   
 }
 
 
-// FIREHOSE IAM ROLE
+## FIREHOSE IAM ROLE
 module "firehose_iam_role" {
   source = "modules/firehose_iam"
   bucket_arn = "${module.firehose_s3.arn}"
 }
 
-// FIREHOSE LAMBDA 
+## FIREHOSE LAMBDA 
 resource "aws_lambda_function" "process_data" {
   role = "${module.firehose_iam_role.arn}"
   filename = "etl.zip"
@@ -87,6 +91,7 @@ resource "aws_lambda_function" "process_data" {
   source_code_hash = "${base64sha256(file("etl.zip"))}"
   timeout = 60
 }
+
 
 resource "aws_kinesis_firehose_delivery_stream" "ingest-stream" {
   name        = "ingest-stream"
