@@ -3,7 +3,7 @@ resource "aws_redshift_cluster" "redshift_cluster" {
   database_name      = "mydb"
   master_username    = "vitalik"
   master_password    = "Vitalik22"
-  node_type          = "dc1.large"
+  node_type          = "dc2.large"
   cluster_type       = "single-node"
   cluster_subnet_group_name = "${aws_redshift_subnet_group.redshift_subnet_group.name}"
   vpc_security_group_ids = ["${aws_security_group.redshift_access.id}"]
@@ -16,7 +16,7 @@ resource "aws_subnet" "private_subnet" {
   vpc_id            = "${var.vpc_id}"
 
   tags {
-    Name = "private-subnet"
+    Name = "redshift-subnet"
   }
 }
 
@@ -41,6 +41,19 @@ resource "aws_security_group" "redshift_access" {
     to_port = 0
   }
   
+}
+
+resource "aws_route_table" "igw-route-table" {
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${var.igw_id}"
+  }
+  vpc_id = "${var.vpc_id}"
+}
+
+resource "aws_route_table_association" "route_associate" {
+  route_table_id = "${aws_route_table.igw-route-table.id}"
+  subnet_id = "${aws_subnet.private_subnet.id}"
 }
 
 output "database_name" {

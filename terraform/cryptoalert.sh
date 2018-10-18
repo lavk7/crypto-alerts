@@ -46,7 +46,7 @@ function destroy(){
 }
 
 function apply(){
-    docker exec -it crypto-alert /bin/sh -c "cd data; terraform apply -auto-approve"
+    docker exec -it crypto-alert /bin/sh -c "cd data; terraform init;  terraform apply -auto-approve"
 }
 case $1 in
 "deploy")
