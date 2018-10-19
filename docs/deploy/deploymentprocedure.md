@@ -27,7 +27,7 @@
     volume float8,
     quoteVolume float8,
     weightedAverage float8
-)
+    )
     ```
 - Execute the lambda function `ingest_data`:
     - Configure test event
