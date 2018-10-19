@@ -1,6 +1,7 @@
 # Readme
 
 ## Documents contents
+- [Deployment Instructions](docs/deploy/deploymentprocedure.md)
 - [Architecture Design Process](docs/verbose/Design-process.md)
 - [Architecture-Development](docs/architecture/Architecture-development.png)
 - [Implemenation Plan](docs/verbose/implentation_plan.md)
